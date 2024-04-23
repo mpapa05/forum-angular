@@ -1,1 +1,65 @@
-<p>admin works!</p>
+<div *ngIf="roles">
+    <!-- Role Selector -->
+    <mat-form-field appearance="fill">
+      <mat-label>Select Role</mat-label>
+      <mat-select (selectionChange)="onRoleSelected($event)">
+        <mat-option *ngFor="let role of roles" [value]="role.id">{{ role.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  
+    <!-- Role Form -->
+    <ng-container *ngIf="selectedRole">
+      
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>Edit Role</mat-panel-title>
+          </mat-expansion-panel-header>
+          <form [formGroup]="roleForm" (ngSubmit)="saveRoleDetails()">
+            <mat-form-field appearance="fill">
+              <mat-label>Role Name</mat-label>
+              <input matInput formControlName="roleName" />
+            </mat-form-field>
+  
+            <div>
+              <mat-checkbox formControlName="readComments">Read Comments</mat-checkbox>
+              <mat-checkbox formControlName="addDeleteComments">Add/Delete Comments</mat-checkbox>
+              <mat-checkbox formControlName="addDeleteTopics">Add/Delete Topics</mat-checkbox>
+              <mat-checkbox formControlName="deleteOthersCommentsTopics">
+                Delete Others' Comments/Topics
+              </mat-checkbox>
+            </div>
+  
+            <button mat-raised-button type="submit" color="primary">Save</button>
+          </form>
+        </mat-expansion-panel>
+  
+        <!-- User Lists with Drag-and-Drop -->
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>Change Users Role</mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="sorting-controls block w-100 h-10">
+            <mat-radio-group (change)="onSortMethodChange($event.value)" [value]="sortMethod">
+              <mat-radio-button value="name">Sort by Name</mat-radio-button>
+              <mat-radio-button value="id">Sort by ID</mat-radio-button>
+            </mat-radio-group>
+          </div>
+          <div class="user-lists flex">
+            <div class="flex-auto">
+              <h3>Users in Role</h3>
+              <div cdkDropList class="drop-list" id="assignedUsersList" [cdkDropListData]="assignedUsers" [cdkDropListConnectedTo]="['unassignedUsersList']" (cdkDropListDropped)="drop($event)">
+                <div class="drag-item" *ngFor="let user of assignedUsers" cdkDrag>{{ user.name }}</div>
+              </div>
+            </div>
+  
+            <div class="flex-auto">
+              <h3>Users not in Role</h3>
+              <div id="unassignedUsersList" class="drop-list" cdkDropList [cdkDropListData]="unassignedUsers" [cdkDropListConnectedTo]="['assignedUsersList']" (cdkDropListDropped)="drop($event)">
+                <div class="drag-item" *ngFor="let user of unassignedUsers" cdkDrag>{{ user.name }}</div>
+              </div>
+            </div>
+          </div>
+        </mat-expansion-panel>
+      
+    </ng-container>
+</div>

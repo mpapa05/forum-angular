@@ -12,5 +12,7 @@ export interface Topic {
     author: User;
     title: string;
     body: string;
-    comments: Comment[];
+    removed?: boolean;
+    comments?: Comment[];
+    expanded?: boolean;
 }

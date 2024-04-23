@@ -39,6 +39,11 @@ export class ProfileService {
     return this.http.get<TopicResponse>(`http://localhost:8888/api/topics`);
   }
 
+  changePassword(userId: number, password: string): Observable<any> {
+    console.log('changePassword at service', userId, password)
+    return this.http.put<any>(`${this.baseUrl}/${userId}/password`, { password1: password, password2: password });
+  }
+
   // Combine information to create UserWithRoleCommentsTopics
   getUserWithRoleCommentsTopics(userId: number): Observable<UserWithRoleCommentsTopics> {
     const userObservable = this.getUserById(userId);
@@ -80,7 +85,7 @@ export class ProfileService {
         // Count total comments for the user
         let commentsTotal = 0;
         topics.data.forEach((topic) => {
-          commentsTotal += countComments(topic.comments);
+          commentsTotal += countComments(topic.comments ?? []);
         });
   
         // Get the user's role
@@ -111,4 +116,5 @@ export class ProfileService {
       mergeMap((observable) => observable)
     );
   }
+
 }

@@ -6,4 +6,5 @@ export interface Comment {
     author: User;
     removed?: boolean;
     comments?: Comment[];
+    expanded?: boolean;
 }

@@ -6,7 +6,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatTableModule } from '@angular/material/table';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar'; // Snack bar for feedback messages
+import { UserWithRoleCommentsTopics } from '../../interfaces/user';
+import { RoleName, RoleRights } from '../../interfaces/role';
 
 @Component({
   selector: 'app-profile',
@@ -18,15 +22,23 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar'; //
     MatInputModule,
     MatButtonModule,
     MatIconModule,
+    MatCardModule,
     MatSnackBarModule,
+    MatTableModule,
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss']
 })
 export class ProfileComponent implements OnInit {
-  profileForm: FormGroup;
+  userId = 6; // Example user ID
+  userData: UserWithRoleCommentsTopics | null = null;
+  passwordForm: FormGroup;
+  nameEmailForm: FormGroup;
   showPassword1: boolean = false;
   showPassword2: boolean = false;
+  roleRights = RoleRights; // Role rights
+  roleName: RoleName = ""; // Role name
+  roles = {};
 
   private existingPassword: string = ''; // Store the current password
 
@@ -35,11 +47,13 @@ export class ProfileComponent implements OnInit {
     private profileService: ProfileService,
     private snackBar: MatSnackBar // Feedback messages
   ) {
-    this.profileForm = this.fb.group({
+    this.passwordForm = this.fb.group({
+      newPassword: ['', [Validators.minLength(8), Validators.pattern(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{8,}$/)]],
+      confirmPassword: ['', [Validators.required, Validators.minLength(8), Validators.pattern((/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{8,}$/)), this.matchPasswords]],
+    });
+    this.nameEmailForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(5)]],
       email: ['', [Validators.required, Validators.email]],
-      newPassword: ['', [Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)')]],
-      confirmPassword: ['', [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)'), this.matchPasswords]],
     });
   }
 
@@ -48,51 +62,69 @@ export class ProfileComponent implements OnInit {
   }
 
   fetchUserData() {
-    const userId = 2; // Example user ID
-    this.profileService.getUserById(userId).subscribe((response) => {
-      this.existingPassword = response.data.password; // Store the existing password
-      this.profileForm.patchValue({
-        name: response.data.name,
-        email: response.data.email,
+    this.profileService.getUserWithRoleCommentsTopics(this.userId).subscribe((response) => {
+      this.userData = response;
+      this.roleName = this.userData.roleName as RoleName;
+      console.log(this.roleRights[this.roleName]);
+      // this.roles = RoleRights[this.roleName];
+      // this.profileForm.patchValue({
+      //   name: this.userData.name,
+      //   email: this.userData.email,
+      // });
+      this.nameEmailForm.patchValue({
+        name: this.userData.name,
+        email: this.userData.email,
       });
     });
 
-    this.profileService.getUserWithRoleCommentsTopics(userId).subscribe((response) => {
-      // Show user details if needed
-      console.log(response);
-    });
+    // this.profileService.getUserWithRoleCommentsTopics(this.userId).subscribe((response) => {
+    //   // Show user details if needed
+    //   console.log(response);
+    // });
   }
-
-  updateProfile() {
-    if (this.profileForm.invalid) {
+  updateNameEmail() {
+    if (this.nameEmailForm.invalid) {
       return;
     }
 
-    const { newPassword, confirmPassword } = this.profileForm.value;
-
-    // Check if new passwords match the existing password
-    if (newPassword !== this.existingPassword) {
-      this.snackBar.open('New password does not match the current password.', 'Dismiss', {
-        duration: 3000,
-      });
-      return;
-    }
-
-    // If passwords match, update the profile
-    const updatedProfile = {
-      name: this.profileForm.value.name,
-      email: this.profileForm.value.email,
-      newPassword,
+    const updatedNameEmail = {
+      id: this.userId,
+      name: this.nameEmailForm.value.name,
+      email: this.nameEmailForm.value.email,
     };
 
-    this.profileService.updateUser(updatedProfile).subscribe(() => {
-      this.snackBar.open('Profile updated successfully.', 'Dismiss', {
+    this.profileService.updateUser(updatedNameEmail).subscribe(() => {
+      this.snackBar.open('Name and email updated successfully.', 'Dismiss', {
         duration: 3000,
       });
 
       // Fetch role details, comments, and topics after updating the profile
       this.fetchUserRoleAndComments();
     });
+  }
+  updatePassword() {
+    console.log('updatePassword', this.passwordForm.get('newPassword')?.value)
+    if (this.passwordForm.invalid) {
+      return;
+    }
+    
+    if (this.passwordForm.get('newPassword')?.value === this.passwordForm.get('confirmPassword')?.value && this.passwordForm.get('newPassword')?.value) {
+      // If passwords match, update the profile
+      const newPassword = this.passwordForm.get('newPassword')?.value;
+      this.profileService.changePassword( this.userId, newPassword ).subscribe(() => {
+        this.snackBar.open('Profile updated successfully.', 'Dismiss', {
+          duration: 3000,
+        });
+  
+        // Fetch role details, comments, and topics after updating the profile
+        this.fetchUserRoleAndComments();
+      });
+      this.snackBar.open('New password does not match the current password.', 'Dismiss', {
+        duration: 3000,
+      });
+      return;
+    }
+
   }
 
   fetchUserRoleAndComments() {
