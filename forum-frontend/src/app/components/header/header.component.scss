@@ -1,0 +1,16 @@
+.spacer {
+    flex: 1; /* This creates space between elements in the toolbar */
+}
+  
+/* Media query for smaller screens to hide certain elements */
+@media (max-width: 960px) {
+    .mat-toolbar a {
+      display: none; /* Hide toolbar links on smaller screens */
+      height: 200px;
+    }   
+}
+@media (min-width: 960px) {
+    .mat-sidenav-container {
+        display: none; /* Hide sidenav on larger screens */
+    }
+}

@@ -1,0 +1,28 @@
+<div  class="h-[160px] menu-breakpoint:h-[80px]">
+    <mat-toolbar color="primary">
+      <mat-toolbar-row>
+        <button mat-icon-button (click)="sidenav.toggle()" fxShow="true" fxHide.gt-sm>
+          <mat-icon>menu</mat-icon>
+        </button>
+        <!-- <span>Forum</span> -->
+        <span class="menu-spacer"></span>
+        <div fxShow="true" fxHide.lt-md>
+          <!-- The following menu items will be hidden on both SM and XS screen sizes -->
+          <a href="/" class="mr-3" mat-button>Home</a>
+          <a href="/profile" class="mr-3" mat-button>Profile</a>
+          <a href="/admin" class="mr-3" mat-button>Admin</a>
+        </div>
+      </mat-toolbar-row>
+    </mat-toolbar>
+  
+    <mat-sidenav-container style="height: 80px !important;">
+      <mat-sidenav #sidenav>
+        <mat-list>
+          <!-- <mat-list-item (click)="sidenav.toggle()" href="" mat-list-item style="cursor: pointer">Close</mat-list-item> -->
+          <a href="/"><mat-list-item mat-button style="cursor: pointer; height: 20px;">Home</mat-list-item></a>
+          <a href="/profile" ><mat-list-item mat-button style="cursor: pointer; height: 20px;">Profile</mat-list-item></a>
+          <a href="/admin" ><mat-list-item mat-button style="cursor: pointer; height: 20px;">Admin</mat-list-item></a>
+        </mat-list>
+      </mat-sidenav>
+    </mat-sidenav-container>
+  </div>
