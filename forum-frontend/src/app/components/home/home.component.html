@@ -28,6 +28,32 @@
         <span class="ml-auto text-sm text-gray-500">By {{ comment.author.name }}</span>
       </mat-expansion-panel-header>
       <div class="px-4 py-2">
+          <div class="container flex gap-4">
+            <button mat-raised-button color="warn" class="flex-auto mt-5" (click)="removeComment()">
+              Remove Comment
+            </button>
+            <form (ngSubmit)="addComment()" #subCommentForm="ngForm" class="flex-auto gap-4">
+              <mat-form-field appearance="fill" class="flex-auto w-[70%]">
+                <mat-label>Reply</mat-label>
+                <textarea
+                  matInput
+                  [(ngModel)]="newCommentBody"
+                  name="replyBody"
+                  required
+                  placeholder="Reply to this comment"
+                ></textarea>
+              </mat-form-field>
+              <button
+                mat-raised-button
+                color="primary"
+                type="submit"
+                class="flex-auto mb-5 ml-5"
+                [disabled]="!subCommentForm.valid"
+              >
+                Reply
+              </button>
+            </form>
+          </div>
         <!-- Recursive condition to show further comments if any -->
         <div *ngIf="comment.comments && comment.comments.length > 0">
           <mat-accordion>
@@ -37,15 +63,9 @@
             </ng-container>
           </mat-accordion>
         </div>
-  
-        <!-- If there are no further comments -->
-        <div *ngIf="!(comment.comments && comment.comments.length > 0)">
-          <p class="text-sm">{{ comment.body }}</p>
-          <small>By {{ comment.author.name }}</small>
-        </div>
       </div>
     </mat-expansion-panel>
-  </ng-template>
+</ng-template>
   
   <!-- Main template for topics and their comments -->
   <div class="topic-list" *ngIf="topics">

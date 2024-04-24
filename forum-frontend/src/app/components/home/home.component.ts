@@ -114,62 +114,64 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  toggleComments(topic: Topic) {
-    topic.expanded = !topic.expanded; // Toggle the expanded state
-    if (topic.expanded && !topic.comments) {
-      this.homeService.getTopicComments(topic.id).subscribe(
-        (response) => {
-          if (response.status === 200) {
-            topic.comments = response.data;
-          } else {
-            this.snackBar.open('Error loading comments', 'Dismiss', { duration: 3000 });
-          }
-        },
-        (error) => {
-          this.snackBar.open('Error loading comments', 'Dismiss', { duration: 3000 });
-        }
-      );
-    }
+  addComment() {
+    console.log('addComment')
+    // const commentBody = this.newCommentBody.trim();
+  
+    // if (commentBody) {
+    //   const observable = parentComment
+    //   ? this.homeService.addCommentToComment(topic.id, parentComment.id, commentBody)
+    //   : this.homeService.addCommentToRoot(topic.id, commentBody);
+  
+    //   observable.subscribe(
+    //     (response) => {
+    //       if (response.status === 201) {
+    //         this.snackBar.open('Comment added successfully', 'Dismiss', { duration: 3000 });
+
+    //         const newComment = response.data;
+
+    //         if (parentComment) {
+    //           parentComment.comments ??= [];
+    //           parentComment.comments.push(newComment);
+    //         } else {
+    //           topic.comments ??= [];
+    //           // topic.comments.push(newComment);
+    //         }
+    //       } else {
+    //         this.snackBar.open('Error adding comment', 'Dismiss', { duration: 3000 });
+    //       }
+    //     },
+    //     (error) => {
+    //       this.snackBar.open('Error adding comment', 'Dismiss', { duration: 3000 });
+    //     }
+    //   );
+    // }
   }
 
-  addComment(topic: Topic, parentComment?: Comment) {
-    const commentBody = this.newCommentBody.trim();
-  
-    if (commentBody) {
-      const endpoint = parentComment
-        ? `http://localhost:8888/api/topic/${topic.id}/comment/${parentComment.id}/add`
-        : `http://localhost:8888/api/topic/${topic.id}/comment/add`;
-  
-      // Add the correct data object
-      this.homeService.addComment(endpoint, commentBody ).subscribe(
-        (response) => {
-          if (response.status === 201) {
-            this.snackBar.open('Comment added successfully', 'Dismiss', { duration: 3000 });
-            
-            const newComment = response.data; // Confirm `response.data` is of type `Comment`
-            
-            if (parentComment) {
-              // Ensure `parentComment.comments` is defined and is a `Comment[]`
-              parentComment.comments ??= []; // Use nullish coalescing operator
-              // parentComment.comments.push(newComment); // Add the new comment
-              console.log('newComment2', newComment);
-            } else {
-              // Ensure `topic.comments` is defined and is a `Comment[]`
-              topic.comments ??= []; // Use nullish coalescing operator
-              // topic.comments.push(newComment); // Add the new comment
-              console.log('newComment22222', newComment);
-            }
-          }
-        },
-        (error) => {
-          this.snackBar.open('Error adding comment', 'Dismiss', { duration: 3000 });
-        }
-      );
-    }
+  removeComment() {
+    console.log('removeComment')
+    // this.homeService.removeComment(topic.id, comment.id).subscribe(
+    //   (response) => {
+    //     comment.removed = true;
+    //     this.snackBar.open('Comment removed', 'Dismiss', { duration: 3000 });
+    //   },
+    //   (error) => {
+    //     this.snackBar.open('Error removing comment', 'Dismiss', { duration: 3000 });
+    //   }
+    // );
   }
 
-  markCommentRemoved(comment: Comment) {
-    comment.removed = true;
+  markCommentRemoved(topic: Topic, comment: Comment) {
+    topic.removed = true; // Set the removed flag to true
+    // Optionally, inform the backend of the change
+    this.homeService.removeComment(topic.id, comment.id).subscribe(
+      (response) => {
+        this.snackBar.open('Comment removed', 'Dismiss', { duration: 3000 });
+      },
+      (error) => {
+        this.snackBar.open('Error removing comment', 'Dismiss', { duration: 3000 });
+      }
+    );
   }
 
 }

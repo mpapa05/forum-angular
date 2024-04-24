@@ -23,7 +23,15 @@ export class HomeService {
     return this.http.get<TopicResponse>(`${this.baseUrl}/topic/${topicId}`);
   }
 
-  addComment(endpoint: string, body: string): Observable<TopicResponse> {
-    return this.http.post<TopicResponse>(endpoint, { body });
+  addCommentToRoot(topicId: number, commentBody: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/topic/${topicId}/comment/add`, { body: commentBody });
+  }
+
+  addCommentToComment(topicId: number, commentId: number, commentBody: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/topic/${topicId}/comment/${commentId}/add`, { body: commentBody });
+  }
+
+  removeComment(topicId: number, commentId: number): Observable<TopicResponse> {
+    return this.http.delete<TopicResponse>(`${this.baseUrl}/topic/${topicId}/comment/${commentId}`);
   }
 }
