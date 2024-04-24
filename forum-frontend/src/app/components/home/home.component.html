@@ -32,7 +32,7 @@
             <button mat-raised-button color="warn" class="flex-auto mt-5" (click)="removeComment()">
               Remove Comment
             </button>
-            <form (ngSubmit)="addComment()" #subCommentForm="ngForm" class="flex-auto gap-4">
+            <form (ngSubmit)="addCommentToComment()" #subCommentForm="ngForm" class="flex-auto gap-4">
               <mat-form-field appearance="fill" class="flex-auto w-[70%]">
                 <mat-label>Reply</mat-label>
                 <textarea
@@ -79,7 +79,29 @@
           </mat-expansion-panel-header>
           <div class="px-4 py-2">
             <h2>Topic body: {{ topic.body }}</h2>
-  
+            <div class="container flex gap-4">
+              <form (ngSubmit)="addCommentToTopic(topic.id)" #subCommentForm="ngForm" class="flex-auto gap-4">
+                <mat-form-field appearance="fill" class="flex-auto w-[70%]">
+                  <mat-label>Reply</mat-label>
+                  <textarea
+                    matInput
+                    [(ngModel)]="this.commentInputs[topic.id]"
+                    name="replyBody"
+                    required
+                    placeholder="Reply to this topic"
+                  ></textarea>
+                </mat-form-field>
+                <button
+                  mat-raised-button
+                  color="primary"
+                  type="submit"
+                  class="flex-auto mb-5 ml-5"
+                  [disabled]="!subCommentForm.valid"
+                >
+                  Reply
+                </button>
+              </form>
+            </div>
             <h3 class="mt-4 mb-2 text-lg font-semibold">Comments:</h3>
   
             <!-- Check for comments -->

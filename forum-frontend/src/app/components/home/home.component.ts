@@ -5,7 +5,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { HomeService } from '../../services/home/home.service';
 import { ProfileService } from '../../services/profile/profile.service';
 import { Topic } from '../../interfaces/topic';
-import { Comment } from '../../interfaces/comment';
+import { Comment, TopicCommentInput } from '../../interfaces/comment';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { USER_ID } from '../../constants/constant';
@@ -33,6 +33,8 @@ import { MatIconModule } from '@angular/material/icon';
 export class HomeComponent implements OnInit {
   topics: Topic[] = [];
   newTopicForm: FormGroup;
+  commentInputs: { [key: number]: string } = {}; // To manage unique input for each topic
+  replyInputs: { [key: number]: { [key: number]: string } } = {}; // To manage unique inputs for nested comments
   newCommentBody: string = ''; // Declare newCommentBody
   userId = USER_ID; // Example user ID
   userData: UserResponse | undefined; 
@@ -72,6 +74,8 @@ export class HomeComponent implements OnInit {
           // Initialize the expanded property for all topics
           this.topics.forEach((topic) => {
             topic.expanded = false;
+            this.commentInputs[topic.id] = ''; // Set to empty string for each topic
+            this.replyInputs[topic.id] = {}; // Initialize nested replies for each topic
             // Ensure comments are initialized to prevent undefined errors
             if (!topic.comments) {
               topic.comments = [];
@@ -84,7 +88,6 @@ export class HomeComponent implements OnInit {
       }
     );
   }
-
 
   addNewTopic() {
     if (this.newTopicForm.valid && this.userData) {
@@ -114,35 +117,31 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  addComment() {
-    console.log('addComment')
-    // const commentBody = this.newCommentBody.trim();
-  
-    // if (commentBody) {
-    //   const observable = parentComment
-    //   ? this.homeService.addCommentToComment(topic.id, parentComment.id, commentBody)
-    //   : this.homeService.addCommentToRoot(topic.id, commentBody);
-  
-    //   observable.subscribe(
+  addCommentToComment(
+    // topicId: number, commentId: number
+  ) {
+    // const replyBody = this.replyInputs[topicId]?.[commentId]?.trim();
+    // if (replyBody) {
+    //   this.homeService.addCommentToComment(topicId, commentId, replyBody).subscribe(
     //     (response) => {
     //       if (response.status === 201) {
-    //         this.snackBar.open('Comment added successfully', 'Dismiss', { duration: 3000 });
-
+    //         this.snackBar.open('Reply added', 'Dismiss', { duration: 3000 });
     //         const newComment = response.data;
 
+    //         const topic = this.topics.find(t => t.id === topicId);
+    //         const parentComment = topic?.comments?.find(c => c.id === commentId);
+
     //         if (parentComment) {
-    //           parentComment.comments ??= [];
+    //           parentComment.comments = parentComment.comments || [];
     //           parentComment.comments.push(newComment);
-    //         } else {
-    //           topic.comments ??= [];
-    //           // topic.comments.push(newComment);
     //         }
-    //       } else {
-    //         this.snackBar.open('Error adding comment', 'Dismiss', { duration: 3000 });
+
+    //         // Reset the reply input after successful addition
+    //         this.replyInputs[topicId][commentId] = '';
     //       }
     //     },
     //     (error) => {
-    //       this.snackBar.open('Error adding comment', 'Dismiss', { duration: 3000 });
+    //       this.snackBar.open('Error adding reply', 'Dismiss', { duration: 3000 });
     //     }
     //   );
     // }
@@ -159,6 +158,44 @@ export class HomeComponent implements OnInit {
     //     this.snackBar.open('Error removing comment', 'Dismiss', { duration: 3000 });
     //   }
     // );
+  }
+
+  addCommentToTopic(topicId: number) {
+    const commentBody = this.commentInputs[topicId]?.trim();
+    if (commentBody && this.userData) {
+      console.log('commentBody', topicId, commentBody, this.userData);
+      const newCommentForRoot: TopicCommentInput = {
+        body: commentBody,
+        author: {
+          id: this.userData.data.id,
+          name: this.userData.data.name,
+          email: this.userData.data.email,
+          role: this.userData.data.role,
+        }
+      }
+      this.homeService.addCommentToRoot(topicId, newCommentForRoot).subscribe(
+        (response) => {
+          if (response.status === 200) {
+            this.snackBar.open('Comment added', 'Dismiss', { duration: 3000 });
+            const newComment = response.data;
+
+            // const topic = this.topics.find(t => t.id === topicId);
+            // if (topic) {
+            //   topic.comments = topic.comments || [];
+            //   topic.comments.push(newComment);
+            // }
+
+
+            // Reset the input after successful addition
+            this.commentInputs[topicId] = '';
+            this.loadTopics(); // Reload the topics to reflect the new addition
+          }
+        },
+        (error) => {
+          this.snackBar.open('Error adding comment', 'Dismiss', { duration: 3000 });
+        }
+      );
+    }
   }
 
   markCommentRemoved(topic: Topic, comment: Comment) {

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Topic, TopicResponse, TopicsResponse } from '../../interfaces/topic';
+import { Comment, TopicCommentInput } from '../../interfaces/comment';
 
 @Injectable({
   providedIn: 'root'
@@ -23,12 +24,13 @@ export class HomeService {
     return this.http.get<TopicResponse>(`${this.baseUrl}/topic/${topicId}`);
   }
 
-  addCommentToRoot(topicId: number, commentBody: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/topic/${topicId}/comment/add`, { body: commentBody });
+  addCommentToRoot(topicId: number, comment: TopicCommentInput): Observable<any> {
+    console.log('addCommentToRoot', topicId, comment)
+    return this.http.post<TopicCommentInput>(`${this.baseUrl}/topic/${topicId}/comment/add`, comment );
   }
 
-  addCommentToComment(topicId: number, commentId: number, commentBody: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/topic/${topicId}/comment/${commentId}/add`, { body: commentBody });
+  addCommentToComment(topicId: number, commentId: number, comment: TopicCommentInput): Observable<any> {
+    return this.http.post<TopicCommentInput>(`${this.baseUrl}/topic/${topicId}/comment/${commentId}/add`, comment);
   }
 
   removeComment(topicId: number, commentId: number): Observable<TopicResponse> {

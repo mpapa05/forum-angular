@@ -8,3 +8,13 @@ export interface Comment {
     comments?: Comment[];
     expanded?: boolean;
 }
+
+export interface TopicCommentInput {
+    body: string;
+    author: {
+        id: number;
+        name: string;
+        email: string;
+        role: number;
+    };
+}
