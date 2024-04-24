@@ -151,7 +151,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         }
       }
       console.log('newCommentForComment', newCommentForComment);
-      this.homeService.addCommentToComment(topicId, commentId, newCommentForComment).subscribe(
+      this.homeService.addCommentToComment(topicId, commentId, newCommentForComment).pipe(takeUntil(this.destroy$)).subscribe(
         (response) => {
           if (response.status === 200) {
             this.snackBar.open('Reply added', 'Dismiss', { duration: 3000 });

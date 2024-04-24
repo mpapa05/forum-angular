@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl  } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
@@ -18,6 +18,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatRadioModule } from '@angular/material/radio';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-admin',
@@ -42,7 +43,8 @@ import { MatRadioModule } from '@angular/material/radio';
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
 })
-export class AdminComponent implements OnInit {
+export class AdminComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   roles: Role[] = []; // List of all roles
   selectedRole: Role | null = null; // Selected role
   roleForm: FormGroup; // Form to edit role name and permissions
@@ -73,7 +75,7 @@ export class AdminComponent implements OnInit {
 
   // Load roles from the server
   loadRoles() {
-    this.adminService.getRoles().subscribe((roles) => {
+    this.adminService.getRoles().pipe(takeUntil(this.destroy$)).subscribe((roles) => {
       this.roles = roles.data;
     });
   }
@@ -81,7 +83,7 @@ export class AdminComponent implements OnInit {
   // Handler for when a new role is selected
   onRoleSelected(event: MatSelectChange) {  
     const roleId = event.value;
-    this.adminService.getRoleById(roleId).subscribe((role) => {
+    this.adminService.getRoleById(roleId).pipe(takeUntil(this.destroy$)).subscribe((role) => {
     this.selectedRole = role.data;
 
       const rights = this.selectedRole.rights;
@@ -102,12 +104,12 @@ export class AdminComponent implements OnInit {
 
   // Load users for a given role
   loadUsersForRole(roleId: number) {
-    this.adminService.getUsersForRole(roleId).subscribe((assignedUsers) => {
+    this.adminService.getUsersForRole(roleId).pipe(takeUntil(this.destroy$)).subscribe((assignedUsers) => {
       console.log(assignedUsers);
       this.assignedUsers = assignedUsers.data;
     });
 
-    this.adminService.getUsers().subscribe((allUsers) => {
+    this.adminService.getUsers().pipe(takeUntil(this.destroy$)).subscribe((allUsers) => {
       this.unassignedUsers = allUsers.data.filter(
         (user) => !this.assignedUsers.some((au) => au.id === user.id)
       );
@@ -142,7 +144,7 @@ export class AdminComponent implements OnInit {
       rights, // Updated permissions
     };
 
-    this.adminService.updateRole(updatedRole).subscribe(() => {
+    this.adminService.updateRole(updatedRole).pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.snackBar.open('Role updated successfully.', 'Dismiss', {
         duration: 2000,
       });
@@ -168,7 +170,7 @@ export class AdminComponent implements OnInit {
       user.role = this.selectedRole?.id || 0;
   
       // Send updated user data to the server
-      this.adminService.updateUserById(user.id, user.role).subscribe(() => {
+      this.adminService.updateUserById(user.id, user.role).pipe(takeUntil(this.destroy$)).subscribe(() => {
         this.snackBar.open('User role updated successfully.', 'Dismiss', {
           duration: 2000,
         });
@@ -196,5 +198,10 @@ export class AdminComponent implements OnInit {
     this.sortMethod = method;
     this.assignedUsers = this.sortUsers(this.assignedUsers);
     this.unassignedUsers = this.sortUsers(this.unassignedUsers);
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ProfileService } from '../../services/profile/profile.service';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -12,6 +12,7 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar'; //
 import { UserWithRoleCommentsTopics } from '../../interfaces/user';
 import { RoleName, RoleRights } from '../../interfaces/role';
 import { USER_ID } from '../../constants/constant';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-profile',
@@ -30,7 +31,8 @@ import { USER_ID } from '../../constants/constant';
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss']
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   userId = USER_ID // Example user ID
   userData: UserWithRoleCommentsTopics | null = null;
   passwordForm: FormGroup;
@@ -61,7 +63,7 @@ export class ProfileComponent implements OnInit {
   }
 
   fetchUserData() {
-    this.profileService.getUserWithRoleCommentsTopics(this.userId).subscribe((response) => {
+    this.profileService.getUserWithRoleCommentsTopics(this.userId).pipe(takeUntil(this.destroy$)).subscribe((response) => {
       this.userData = response;
       this.roleName = this.userData.roleName as RoleName;
       console.log(this.roleRights[this.roleName]);
@@ -76,7 +78,7 @@ export class ProfileComponent implements OnInit {
       });
     });
 
-    // this.profileService.getUserWithRoleCommentsTopics(this.userId).subscribe((response) => {
+    // this.profileService.getUserWithRoleCommentsTopics(this.userId).pipe(takeUntil(this.destroy$)).subscribe((response) => {
     //   // Show user details if needed
     //   console.log(response);
     // });
@@ -92,7 +94,7 @@ export class ProfileComponent implements OnInit {
       email: this.nameEmailForm.value.email,
     };
 
-    this.profileService.updateUser(updatedNameEmail).subscribe(() => {
+    this.profileService.updateUser(updatedNameEmail).pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.snackBar.open('Name and email updated successfully.', 'Dismiss', {
         duration: 3000,
       });
@@ -110,7 +112,7 @@ export class ProfileComponent implements OnInit {
     if (this.passwordForm.get('newPassword')?.value === this.passwordForm.get('confirmPassword')?.value && this.passwordForm.get('newPassword')?.value) {
       // If passwords match, update the profile
       const newPassword = this.passwordForm.get('newPassword')?.value;
-      this.profileService.changePassword( this.userId, newPassword ).subscribe(() => {
+      this.profileService.changePassword( this.userId, newPassword ).pipe(takeUntil(this.destroy$)).subscribe(() => {
         this.snackBar.open('Profile updated successfully.', 'Dismiss', {
           duration: 3000,
         });
@@ -127,7 +129,7 @@ export class ProfileComponent implements OnInit {
   }
 
   fetchUserRoleAndComments() {
-    this.profileService.getUserWithRoleCommentsTopics(this.userId).subscribe((response) => {
+    this.profileService.getUserWithRoleCommentsTopics(this.userId).pipe(takeUntil(this.destroy$)).subscribe((response) => {
       const { roleName, roleRights, commentsTotal, topicsTotal } = response;
 
       // Check if roleRights is an array before using map function
@@ -156,5 +158,10 @@ export class ProfileComponent implements OnInit {
     }
 
     return { passwordMismatch: true };
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
