@@ -105,7 +105,6 @@ export class AdminComponent implements OnInit, OnDestroy {
   // Load users for a given role
   loadUsersForRole(roleId: number) {
     this.adminService.getUsersForRole(roleId).pipe(takeUntil(this.destroy$)).subscribe((assignedUsers) => {
-      console.log(assignedUsers);
       this.assignedUsers = assignedUsers.data;
     });
 

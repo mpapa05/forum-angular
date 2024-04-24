@@ -66,22 +66,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.profileService.getUserWithRoleCommentsTopics(this.userId).pipe(takeUntil(this.destroy$)).subscribe((response) => {
       this.userData = response;
       this.roleName = this.userData.roleName as RoleName;
-      console.log(this.roleRights[this.roleName]);
-      // this.roles = RoleRights[this.roleName];
-      // this.profileForm.patchValue({
-      //   name: this.userData.name,
-      //   email: this.userData.email,
-      // });
+
       this.nameEmailForm.patchValue({
         name: this.userData.name,
         email: this.userData.email,
       });
     });
 
-    // this.profileService.getUserWithRoleCommentsTopics(this.userId).pipe(takeUntil(this.destroy$)).subscribe((response) => {
-    //   // Show user details if needed
-    //   console.log(response);
-    // });
   }
   updateNameEmail() {
     if (this.nameEmailForm.invalid) {
@@ -104,7 +95,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     });
   }
   updatePassword() {
-    console.log('updatePassword', this.passwordForm.get('newPassword')?.value)
     if (this.passwordForm.invalid) {
       return;
     }
@@ -137,7 +127,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
         right.allowed ? `\u001B[32m${right.name}\u001B[0m` : `\u001B[31m${right.name}\u001B[0m`
       ) : [];
 
-      console.log('Role Rights (highlighted):', rightsDisplay);
     });
   }
 

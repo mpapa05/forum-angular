@@ -103,10 +103,8 @@ export class HomeComponent implements OnInit, OnDestroy {
         body: this.newTopicForm?.get('body')?.value,
         comments: []
       }
-      console.log(newTopic);
       this.homeService.addTopic(newTopic).pipe(takeUntil(this.destroy$)).subscribe(
         (response) => {
-          console.log(response)
           if (response.status === 200) {
             this.snackBar.open('Topic added successfully', 'Dismiss', { duration: 3000 });
             this.newTopicForm.reset();
@@ -139,7 +137,6 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.replyInputs[topicId][commentId] = '';
     }
     const replyBody = this.getReplyInput(topicId, commentId);
-    console.log('addCommentToComment topic id:', topicId, "commentId: ", commentId, "replyBody: ", replyBody);
     if (replyBody && this.userData) {
       const newCommentForComment: TopicCommentInput = {
         body: replyBody,
@@ -150,23 +147,13 @@ export class HomeComponent implements OnInit, OnDestroy {
           role: this.userData.data.role,
         }
       }
-      console.log('newCommentForComment', newCommentForComment);
       this.homeService.addCommentToComment(topicId, commentId, newCommentForComment).pipe(takeUntil(this.destroy$)).subscribe(
         (response) => {
           if (response.status === 200) {
             this.snackBar.open('Reply added', 'Dismiss', { duration: 3000 });
-            const newComment = response.data;
-
-            const topic = this.topics.find(t => t.id === topicId);
-            const parentComment = topic?.comments?.find(c => c.id === commentId);
-
-            if (parentComment) {
-              parentComment.comments = parentComment.comments || [];
-              parentComment.comments.push(newComment);
-            }
-
             // Reset the reply input after successful addition
             this.replyInputs[topicId][commentId] = '';
+            this.loadTopics(); // Reload the topics to reflect the new addition
           }
         },
         (error) => {
@@ -178,6 +165,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   removeComment() {
     console.log('removeComment')
+    //TODO: Implement removeComment
     // this.homeService.removeComment(topic.id, comment.id).pipe(takeUntil(this.destroy$)).subscribe(
     //   (response) => {
     //     comment.removed = true;
@@ -206,7 +194,6 @@ export class HomeComponent implements OnInit, OnDestroy {
         (response) => {
           if (response.status === 200) {
             this.snackBar.open('Comment added', 'Dismiss', { duration: 3000 });
-            const newComment = response.data;
             // Reset the input after successful addition
             this.commentInputs[topicId] = '';
             this.loadTopics(); // Reload the topics to reflect the new addition
