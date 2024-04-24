@@ -3,10 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormGroup, FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HomeService } from '../../services/home/home.service';
+import { ProfileService } from '../../services/profile/profile.service';
 import { Topic } from '../../interfaces/topic';
 import { Comment } from '../../interfaces/comment';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { USER_ID } from '../../constants/constant';
+import { UserResponse } from '../../interfaces/user';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-home',
@@ -17,6 +23,9 @@ import { MatExpansionModule } from '@angular/material/expansion';
     ReactiveFormsModule,
     FormsModule,
     MatExpansionModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
@@ -25,9 +34,12 @@ export class HomeComponent implements OnInit {
   topics: Topic[] = [];
   newTopicForm: FormGroup;
   newCommentBody: string = ''; // Declare newCommentBody
+  userId = USER_ID; // Example user ID
+  userData: UserResponse | undefined; 
 
   constructor(
     private homeService: HomeService,
+    private profileService: ProfileService,
     private fb: FormBuilder,
     private snackBar: MatSnackBar
   ) {
@@ -35,6 +47,16 @@ export class HomeComponent implements OnInit {
       title: ['', Validators.required],
       body: ['', Validators.required],
     });
+    this.profileService.getUserById(this.userId).subscribe(
+      (response) => {
+        if (response.status === 200) {
+          this.userData = response;
+        }
+      },
+      (error) => {
+        this.snackBar.open('Error loading user data', 'Dismiss', { duration: 3000 });
+      }
+    );
   }
 
   ngOnInit() {
@@ -64,11 +86,20 @@ export class HomeComponent implements OnInit {
   }
 
 
-  addTopic() {
-    if (this.newTopicForm.valid) {
-      this.homeService.addTopic(this.newTopicForm.value).subscribe(
+  addNewTopic() {
+    if (this.newTopicForm.valid && this.userData) {
+      const newTopic = {
+        id: 0, //( db will generate id)
+        author: this.userData.data,
+        title: this.newTopicForm?.get('title')?.value,
+        body: this.newTopicForm?.get('body')?.value,
+        comments: []
+      }
+      console.log(newTopic);
+      this.homeService.addTopic(newTopic).subscribe(
         (response) => {
-          if (response.status === 201) {
+          console.log(response)
+          if (response.status === 200) {
             this.snackBar.open('Topic added successfully', 'Dismiss', { duration: 3000 });
             this.newTopicForm.reset();
             this.loadTopics(); // Reload the topics to reflect the new addition
@@ -137,8 +168,8 @@ export class HomeComponent implements OnInit {
     }
   }
 
-
   markCommentRemoved(comment: Comment) {
     comment.removed = true;
   }
+
 }

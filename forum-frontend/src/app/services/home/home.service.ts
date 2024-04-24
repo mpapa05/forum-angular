@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { TopicResponse, TopicsResponse } from '../../interfaces/topic';
+import { Topic, TopicResponse, TopicsResponse } from '../../interfaces/topic';
 
 @Injectable({
   providedIn: 'root'
@@ -15,8 +15,8 @@ export class HomeService {
     return this.http.get<TopicsResponse>(`${this.baseUrl}/topics`);
   }
 
-  addTopic(topic: { title: string; body: string }): Observable<TopicResponse> {
-    return this.http.post<TopicResponse>(`${this.baseUrl}/topic/add`, topic);
+  addTopic(topic: Topic): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/topic/add`, topic );
   }
 
   getTopicComments(topicId: number): Observable<TopicResponse> {

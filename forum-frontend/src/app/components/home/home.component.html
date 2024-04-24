@@ -1,5 +1,24 @@
-<div class="new-topic-form">
-    <form action=""></form>
+<div class="container mx-auto p-4 bg-[#e5e7eb]">
+    <h2>Add New Topic</h2>
+    <form [formGroup]="newTopicForm" (ngSubmit)="addNewTopic()" *ngIf="userData" class="flex gap-4">
+        <mat-form-field appearance="fill" class="flex-auto">
+            <mat-label>Topic Title</mat-label>
+            <textarea matInput formControlName="title" placeholder="Enter topic title"></textarea>
+            <mat-error *ngIf="newTopicForm?.get('title')?.hasError('required')">
+                Title is required
+            </mat-error>
+        </mat-form-field>
+    
+        <mat-form-field appearance="fill" class="flex-auto">
+            <mat-label>Topic Body</mat-label>
+            <textarea matInput formControlName="body" placeholder="Enter topic body"></textarea>
+            <mat-error *ngIf="newTopicForm.get('body')?.hasError('required')">
+                Body is required
+            </mat-error>
+        </mat-form-field>
+    
+        <button mat-raised-button color="primary" type="submit" class="flex-auto mt-5" [disabled]="newTopicForm.invalid">Add Topic</button>
+    </form>
 </div>
 
 <ng-template #commentTemplate let-comment>

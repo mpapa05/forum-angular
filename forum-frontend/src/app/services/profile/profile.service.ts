@@ -23,10 +23,6 @@ export class ProfileService {
     return this.http.get<UserResponse>(`${this.baseUrl}/${userId}`);
   }
 
-  logInUser(): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/login`); // Log in a user
-  }
-
   updateUser(user: any): Observable<any> {
     return this.http.put<any>(`${this.baseUrl}/${user.id}`, user); // Update a user
   }

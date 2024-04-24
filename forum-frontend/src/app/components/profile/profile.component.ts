@@ -11,6 +11,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar'; // Snack bar for feedback messages
 import { UserWithRoleCommentsTopics } from '../../interfaces/user';
 import { RoleName, RoleRights } from '../../interfaces/role';
+import { USER_ID } from '../../constants/constant';
 
 @Component({
   selector: 'app-profile',
@@ -30,7 +31,7 @@ import { RoleName, RoleRights } from '../../interfaces/role';
   styleUrls: ['./profile.component.scss']
 })
 export class ProfileComponent implements OnInit {
-  userId = 6; // Example user ID
+  userId = USER_ID // Example user ID
   userData: UserWithRoleCommentsTopics | null = null;
   passwordForm: FormGroup;
   nameEmailForm: FormGroup;
@@ -39,8 +40,6 @@ export class ProfileComponent implements OnInit {
   roleRights = RoleRights; // Role rights
   roleName: RoleName = ""; // Role name
   roles = {};
-
-  private existingPassword: string = ''; // Store the current password
 
   constructor(
     private fb: FormBuilder,
@@ -128,9 +127,7 @@ export class ProfileComponent implements OnInit {
   }
 
   fetchUserRoleAndComments() {
-    const userId = 2; // Example user ID
-
-    this.profileService.getUserWithRoleCommentsTopics(userId).subscribe((response) => {
+    this.profileService.getUserWithRoleCommentsTopics(this.userId).subscribe((response) => {
       const { roleName, roleRights, commentsTotal, topicsTotal } = response;
 
       // Check if roleRights is an array before using map function
