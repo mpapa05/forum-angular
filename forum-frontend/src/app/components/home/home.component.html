@@ -21,7 +21,7 @@
     </form>
 </div>
 
-<ng-template #commentTemplate let-comment>
+<ng-template #commentTemplate let-comment let-topic="topic">
     <mat-expansion-panel>
       <mat-expansion-panel-header>
         <span>{{ comment.body }}</span>
@@ -32,12 +32,13 @@
             <button mat-raised-button color="warn" class="flex-auto mt-5" (click)="removeComment()">
               Remove Comment
             </button>
-            <form (ngSubmit)="addCommentToComment()" #subCommentForm="ngForm" class="flex-auto gap-4">
+            <form (ngSubmit)="addCommentToComment(topic.id, comment.id)" #subCommentForm="ngForm" class="flex-auto gap-4">
               <mat-form-field appearance="fill" class="flex-auto w-[70%]">
                 <mat-label>Reply</mat-label>
                 <textarea
                   matInput
-                  [(ngModel)]="newCommentBody"
+                  [ngModel]="getReplyInput(topic.id, comment.id)" 
+                  (ngModelChange)="replyInputs[topic.id][comment.id] = $event"
                   name="replyBody"
                   required
                   placeholder="Reply to this comment"
@@ -59,7 +60,7 @@
           <mat-accordion>
             <!-- Recursive template -->
             <ng-container *ngFor="let nestedComment of comment.comments">
-              <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: nestedComment }"></ng-container>
+              <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: nestedComment, topic: topic }"></ng-container>
             </ng-container>
           </mat-accordion>
         </div>
@@ -72,7 +73,8 @@
     <div class="container mx-auto p-4">
       <mat-accordion multi>
         <!-- Loop through topics -->
-        <mat-expansion-panel *ngFor="let topic of topics; let i = index;">
+        <ng-container *ngFor="let topic of topics; let i = index;">
+        <mat-expansion-panel *ngIf="topic">
           <mat-expansion-panel-header>
             <span class="text-lg font-bold">Topic Title: {{ topic.title }}</span>
             <span class="text-sm ml-auto text-gray-500">By {{ topic.author.name }}</span>
@@ -107,7 +109,7 @@
             <!-- Check for comments -->
             <mat-accordion>
               <ng-container *ngFor="let comment of topic.comments">
-                <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: comment }"></ng-container>
+                <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: comment, topic: topic }"></ng-container>
               </ng-container>
             </mat-accordion>
   
@@ -117,6 +119,7 @@
             </div>
           </div>
         </mat-expansion-panel>
+        </ng-container>
       </mat-accordion>
     </div>
   </div>

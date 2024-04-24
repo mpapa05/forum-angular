@@ -30,6 +30,7 @@ export class HomeService {
   }
 
   addCommentToComment(topicId: number, commentId: number, comment: TopicCommentInput): Observable<any> {
+    console.log('addCommentToComment', topicId,commentId, comment)
     return this.http.post<TopicCommentInput>(`${this.baseUrl}/topic/${topicId}/comment/${commentId}/add`, comment);
   }
 

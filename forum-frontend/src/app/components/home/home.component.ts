@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -13,6 +13,7 @@ import { UserResponse } from '../../interfaces/user';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -30,7 +31,8 @@ import { MatIconModule } from '@angular/material/icon';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   topics: Topic[] = [];
   newTopicForm: FormGroup;
   commentInputs: { [key: number]: string } = {}; // To manage unique input for each topic
@@ -49,7 +51,7 @@ export class HomeComponent implements OnInit {
       title: ['', Validators.required],
       body: ['', Validators.required],
     });
-    this.profileService.getUserById(this.userId).subscribe(
+    this.profileService.getUserById(this.userId).pipe(takeUntil(this.destroy$)).pipe(takeUntil(this.destroy$)).subscribe(
       (response) => {
         if (response.status === 200) {
           this.userData = response;
@@ -66,20 +68,23 @@ export class HomeComponent implements OnInit {
   }
 
   loadTopics() {
-    this.homeService.getAllTopics().subscribe(
+    this.homeService.getAllTopics().pipe(takeUntil(this.destroy$)).subscribe(
       (response) => {
         if (response.status === 200) {
           this.topics = response.data;
-          console.log(this.topics)
           // Initialize the expanded property for all topics
           this.topics.forEach((topic) => {
             topic.expanded = false;
-            this.commentInputs[topic.id] = ''; // Set to empty string for each topic
-            this.replyInputs[topic.id] = {}; // Initialize nested replies for each topic
+            this.commentInputs[topic.id] = ''; // Initialize to empty
+            this.replyInputs[topic.id] = {}; // Initialize nested replies
             // Ensure comments are initialized to prevent undefined errors
             if (!topic.comments) {
               topic.comments = [];
             }
+            // Initialize replyInputs for each comment in the topic
+            topic.comments.forEach((comment) => {
+              this.replyInputs[topic.id][comment.id] = ''; // Initialize to empty
+            });
           });
         }
       },
@@ -99,7 +104,7 @@ export class HomeComponent implements OnInit {
         comments: []
       }
       console.log(newTopic);
-      this.homeService.addTopic(newTopic).subscribe(
+      this.homeService.addTopic(newTopic).pipe(takeUntil(this.destroy$)).subscribe(
         (response) => {
           console.log(response)
           if (response.status === 200) {
@@ -116,40 +121,64 @@ export class HomeComponent implements OnInit {
       );
     }
   }
+  getReplyInput(topicId: number, commentId: number): string {
+    if (!this.replyInputs[topicId]) {
+      this.replyInputs[topicId] = {};
+    }
+    if (!this.replyInputs[topicId][commentId]) {
+      this.replyInputs[topicId][commentId] = '';
+    }
+    return this.replyInputs[topicId][commentId];
+  }
 
-  addCommentToComment(
-    // topicId: number, commentId: number
-  ) {
-    // const replyBody = this.replyInputs[topicId]?.[commentId]?.trim();
-    // if (replyBody) {
-    //   this.homeService.addCommentToComment(topicId, commentId, replyBody).subscribe(
-    //     (response) => {
-    //       if (response.status === 201) {
-    //         this.snackBar.open('Reply added', 'Dismiss', { duration: 3000 });
-    //         const newComment = response.data;
+  addCommentToComment(topicId: any, commentId: any) {
+    if (!this.replyInputs[topicId]) {
+      this.replyInputs[topicId] = {};
+    }
+    if (!this.replyInputs[topicId][commentId]) {
+      this.replyInputs[topicId][commentId] = '';
+    }
+    const replyBody = this.getReplyInput(topicId, commentId);
+    console.log('addCommentToComment topic id:', topicId, "commentId: ", commentId, "replyBody: ", replyBody);
+    if (replyBody && this.userData) {
+      const newCommentForComment: TopicCommentInput = {
+        body: replyBody,
+        author: {
+          id: this.userData.data.id,
+          name: this.userData.data.name,
+          email: this.userData.data.email,
+          role: this.userData.data.role,
+        }
+      }
+      console.log('newCommentForComment', newCommentForComment);
+      this.homeService.addCommentToComment(topicId, commentId, newCommentForComment).subscribe(
+        (response) => {
+          if (response.status === 200) {
+            this.snackBar.open('Reply added', 'Dismiss', { duration: 3000 });
+            const newComment = response.data;
 
-    //         const topic = this.topics.find(t => t.id === topicId);
-    //         const parentComment = topic?.comments?.find(c => c.id === commentId);
+            const topic = this.topics.find(t => t.id === topicId);
+            const parentComment = topic?.comments?.find(c => c.id === commentId);
 
-    //         if (parentComment) {
-    //           parentComment.comments = parentComment.comments || [];
-    //           parentComment.comments.push(newComment);
-    //         }
+            if (parentComment) {
+              parentComment.comments = parentComment.comments || [];
+              parentComment.comments.push(newComment);
+            }
 
-    //         // Reset the reply input after successful addition
-    //         this.replyInputs[topicId][commentId] = '';
-    //       }
-    //     },
-    //     (error) => {
-    //       this.snackBar.open('Error adding reply', 'Dismiss', { duration: 3000 });
-    //     }
-    //   );
-    // }
+            // Reset the reply input after successful addition
+            this.replyInputs[topicId][commentId] = '';
+          }
+        },
+        (error) => {
+          this.snackBar.open('Error adding reply', 'Dismiss', { duration: 3000 });
+        }
+      );
+    }
   }
 
   removeComment() {
     console.log('removeComment')
-    // this.homeService.removeComment(topic.id, comment.id).subscribe(
+    // this.homeService.removeComment(topic.id, comment.id).pipe(takeUntil(this.destroy$)).subscribe(
     //   (response) => {
     //     comment.removed = true;
     //     this.snackBar.open('Comment removed', 'Dismiss', { duration: 3000 });
@@ -173,19 +202,11 @@ export class HomeComponent implements OnInit {
           role: this.userData.data.role,
         }
       }
-      this.homeService.addCommentToRoot(topicId, newCommentForRoot).subscribe(
+      this.homeService.addCommentToRoot(topicId, newCommentForRoot).pipe(takeUntil(this.destroy$)).subscribe(
         (response) => {
           if (response.status === 200) {
             this.snackBar.open('Comment added', 'Dismiss', { duration: 3000 });
             const newComment = response.data;
-
-            // const topic = this.topics.find(t => t.id === topicId);
-            // if (topic) {
-            //   topic.comments = topic.comments || [];
-            //   topic.comments.push(newComment);
-            // }
-
-
             // Reset the input after successful addition
             this.commentInputs[topicId] = '';
             this.loadTopics(); // Reload the topics to reflect the new addition
@@ -201,7 +222,7 @@ export class HomeComponent implements OnInit {
   markCommentRemoved(topic: Topic, comment: Comment) {
     topic.removed = true; // Set the removed flag to true
     // Optionally, inform the backend of the change
-    this.homeService.removeComment(topic.id, comment.id).subscribe(
+    this.homeService.removeComment(topic.id, comment.id).pipe(takeUntil(this.destroy$)).subscribe(
       (response) => {
         this.snackBar.open('Comment removed', 'Dismiss', { duration: 3000 });
       },
@@ -209,6 +230,11 @@ export class HomeComponent implements OnInit {
         this.snackBar.open('Error removing comment', 'Dismiss', { duration: 3000 });
       }
     );
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
 }
