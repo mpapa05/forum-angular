@@ -7,12 +7,18 @@ export interface TopicResponse {
     data: Topic[],
 }
 
+export interface TopicsResponse {
+    status: number,
+    message: string,
+    data: Topic[],
+}
+
 export interface Topic {
     id: number;
     author: User;
     title: string;
     body: string;
+    comments?: Comment[] | [];
     removed?: boolean;
-    comments?: Comment[];
     expanded?: boolean;
 }

@@ -1,1 +1,61 @@
-<p>home works!</p>
+<div class="new-topic-form">
+    <form action=""></form>
+</div>
+
+<ng-template #commentTemplate let-comment>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <span>{{ comment.body }}</span>
+        <span class="ml-auto text-sm text-gray-500">By {{ comment.author.name }}</span>
+      </mat-expansion-panel-header>
+      <div class="px-4 py-2">
+        <!-- Recursive condition to show further comments if any -->
+        <div *ngIf="comment.comments && comment.comments.length > 0">
+          <mat-accordion>
+            <!-- Recursive template -->
+            <ng-container *ngFor="let nestedComment of comment.comments">
+              <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: nestedComment }"></ng-container>
+            </ng-container>
+          </mat-accordion>
+        </div>
+  
+        <!-- If there are no further comments -->
+        <div *ngIf="!(comment.comments && comment.comments.length > 0)">
+          <p class="text-sm">{{ comment.body }}</p>
+          <small>By {{ comment.author.name }}</small>
+        </div>
+      </div>
+    </mat-expansion-panel>
+  </ng-template>
+  
+  <!-- Main template for topics and their comments -->
+  <div class="topic-list" *ngIf="topics">
+    <div class="container mx-auto p-4">
+      <mat-accordion multi>
+        <!-- Loop through topics -->
+        <mat-expansion-panel *ngFor="let topic of topics; let i = index;">
+          <mat-expansion-panel-header>
+            <span class="text-lg font-bold">Topic Title: {{ topic.title }}</span>
+            <span class="text-sm ml-auto text-gray-500">By {{ topic.author.name }}</span>
+          </mat-expansion-panel-header>
+          <div class="px-4 py-2">
+            <h2>Topic body: {{ topic.body }}</h2>
+  
+            <h3 class="mt-4 mb-2 text-lg font-semibold">Comments:</h3>
+  
+            <!-- Check for comments -->
+            <mat-accordion>
+              <ng-container *ngFor="let comment of topic.comments">
+                <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: comment }"></ng-container>
+              </ng-container>
+            </mat-accordion>
+  
+            <!-- If no comments for a topic -->
+            <div *ngIf="topic.comments?.length === 0" class="text-gray-500">
+              No comments yet.
+            </div>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+  </div>
